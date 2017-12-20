@@ -5,7 +5,7 @@ import numpy as np
 #np.random.seed(0)
 
 limite = 100
-number_sort = 5000
+number_sort = 20000
 X = []
 Y = []
 X_Eval = []
@@ -25,9 +25,7 @@ def bubbleSort(alist, ct=False, ev=False, nn=False):
 						X_Eval.append([it/limite for it in alist.tolist()]+[i/5.])
 
 				if not nn:
-					temp = alist[i]
-					alist[i] = alist[i+1]
-					alist[i+1] = temp
+					alist = vetor(alist, i, i+1)
 				else:
 					state = [it/limite for it in alist.tolist()]+[i/5.]
 					result = model.predict(np.reshape(state, [1, len(state)]))[0]
@@ -43,27 +41,38 @@ def bubbleSort(alist, ct=False, ev=False, nn=False):
 	return alist
 
 
+def swap(vetor, i, j):
+	temp = vetor[i]
+	vetor[i] = vetor[j]
+	vetor[j] = temp
+	return vetor.tolist()
+
 def generate_data():
 	for i in range(number_sort):
 		#print("Generating data ",i,"/",number_sort)
 		aleatorio = np.random.sample(5)*limite
 		aleatorio = np.rint(aleatorio)
-		bubbleSort(aleatorio, True)
+		i = int(np.rint(np.random.random()*4))
+		j = int(np.rint(np.random.random()*4))
+		X.append((aleatorio/limite).tolist()+[i/4, j/4])
+		Y.append([it/limite for it in swap(aleatorio, i, j)]+[i/4, j/4])
 		#print (X[len(X)-1])
 		#print (Y[len(Y)-1])
 	for i in range(int(number_sort*0.3)):
 		#print("Generating data ",i,"/",number_sort)
-		aleatorio = np.rint(np.random.sample(5)*limite)
-		X_Test_sort.append(aleatorio)
-		Y_Test_sort.append(bubbleSort(aleatorio, True, True))
+		aleatorio = np.random.sample(5)*limite
+		aleatorio = np.rint(aleatorio)
+		i = int(np.rint(np.random.random()*4))
+		j = int(np.rint(np.random.random()*4))
+		X_Eval.append((aleatorio/limite).tolist()+[i/4, j/4])
+		Y_Eval.append([it/limite for it in swap(aleatorio, i, j)]+[i/4, j/4])
 
 
 # create model
 model = Sequential()
-model.add(Dense(50, input_dim=6, activation='relu'))
+model.add(Dense(50, input_dim=7, activation='relu'))
 model.add(Dense(50, activation='relu'))
-model.add(Dense(50, activation='relu'))
-model.add(Dense(6, activation='sigmoid'))
+model.add(Dense(7, activation='linear'))
 
 
 # Compile model
@@ -87,7 +96,7 @@ try:
 except OSError:
 	# Fit the model
 	print("Training")
-	model.fit(X, Y, epochs=20, batch_size=1)
+	model.fit(X, Y, epochs=70, batch_size=10)
 	# evaluate the model
 	scores = model.evaluate(X_Eval, Y_Eval)
 	print("\n%s: %.2f%%" % (model.metrics_names[1], scores[1]*100))
@@ -101,12 +110,9 @@ print("\n\n\nResultado:")
 for i in range(6):
 	alist = np.rint(np.random.sample(5)*limite)
 	print(alist)
-	state = [it/limite for it in alist.tolist()]+[1/5.]
+	state = [it/limite for it in alist.tolist()]+[1/4, 4/4]
 	result = model.predict(np.reshape(state, [1, len(state)]))[0]
 	alist = np.rint(result[:5]*limite)
-
-	#alist = bubbleSort(alist, nn=True)
-
 	print(alist,"\n")
 
 num_acertos = 0
